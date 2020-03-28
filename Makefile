@@ -1,12 +1,13 @@
 
 
 
-all:
-	nasm boot.asm -f bin -o boot.bin
-	sudo dd if=boot.bin bs=512 of=/dev/fd0
+# all:
+# # 	./fasm/fasm boot.asm
 
-run:
-	qemu-system-x86_64 boot.bin
+# run:
+# 	bochs
+# # 	qemu-system-x86_64 ./bin/simOS.bin
 
-clean:
-	@rm -rf *.o kernel.elf os.iso
+# iso:
+# 	sudo mkfs.vfat -I /dev/sdb
+# 	sudo dd if=simOS.bin of=/dev/sdb
