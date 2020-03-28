@@ -1,6 +1,4 @@
 
-
-
 # all:
 # # 	./fasm/fasm boot.asm
 
