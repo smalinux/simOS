@@ -16,8 +16,8 @@
 	mov cl, 0x02				; starting sector to read from disk
 
 read_disk1:
-	mov ah, 0x02
-	mov al, 0x01
+	mov ah, 0x02				; BIOS int 12/ah=2 read from disk
+	mov al, 0x01				; # of sectors to read
 	int 0x13					; BIOS read from disk int
 
 	jc read_disk1				; retry if disk read error (CF = 1)
@@ -36,8 +36,8 @@ read_disk1:
 	mov cl, 0x03				; starting sector to read from disk
 
 read_disk2:
-	mov ah, 0x02
-	mov al, 0x01
+	mov ah, 0x02				; BIOS int 12/ah=2 read from disk
+	mov al, 0x02				; # of sectors to read
 	int 0x13					; BIOS read from disk int
 
 	jc read_disk2				; retry if disk read error (CF = 1)

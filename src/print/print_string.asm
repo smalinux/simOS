@@ -1,5 +1,5 @@
 ;;;
-;;; print_string function
+;;; print_string function - Print string in SI register
 ;;;
 
 	; if (al == 0)
@@ -10,6 +10,8 @@
 print_string:
 	pusha
 	mov ah, 0x0e
+	mov bh, 0x0						; page number
+	mov bl, 0x07					; color
 	.print_char:
 		mov al, [si]
 		cmp al, 0

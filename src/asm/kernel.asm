@@ -5,6 +5,7 @@
 	;; ------------------------------------------------------------------
 	;; General Setings
 	;; ------------------------------------------------------------------
+reset_screen:
 	; Set Video Mode
 	mov ah, 0
 	mov al, 0x03
@@ -20,23 +21,10 @@
 	mov si, welcome
 	call print_string
 
-	; mov si, endl
-	; call print_string
-	
-	; mov si, line
-	; call print_string
-
+main_menu:
 	; Print Menu heading
 	mov si, fileTable
 	call print_string
-
-	; mov si, doller
-	; 	call print_string
-
-	; Write Hex in Teletype 
-	; mov si, 0x12cB 			; Sample hex number
-	; call print_hex
-
 
 	;; -------------------------------------------------------------------
 	;; Get user input, print to screen & choose menu option or run command
@@ -62,13 +50,15 @@ run_cmd:
 	mov al, [cmdString]
 	cmp al, 'F'					; file table command/ menu option
 	je filebrowser
-	cmp al, 'R'
+	cmp al, 'R'					; Warm reboot
 	je reboot
+	cmp al, 'P'					; print regs values
+	je print_regs
 	cmp al, 'N'					; e(n)d our current program
 	je end_os
 	mov si, failure 			; command not found
 	call print_string
-	jmp get_input
+	jmp main_menu
 
 
 
@@ -93,7 +83,7 @@ filebrowser:
 	; mov bl, 0x01
 	; int 0x10
 
-	; Print 'File table hrader'
+	; Print 'File table Header'
 	mov si, fileTableHeading
 	call print_string
 
@@ -135,7 +125,11 @@ next_element:
 	jmp filetable_loop
 
 stop:
-	hlt
+	mov si, goBackMsg
+	call print_string
+	mov ah, 0x0					; pause screen
+	int 0x16
+	jmp main_menu
 
 
 	;; -------------------------------------------------------------------
@@ -151,13 +145,35 @@ stop:
 
 
 	;; -------------------------------------------------------------------
-	;; R) 'warm' reboot - far jump to reset vector
+	;; Menu R) 'warm' reboot - far jump to reset vector
 	;; -------------------------------------------------------------------
 reboot:
 	jmp 0xffff:0x0000
 
 	;; -------------------------------------------------------------------
-	;; N) THE END OS - jump forever
+	;; Menu P) Print Registers
+	;; -------------------------------------------------------------------
+print_regs:
+	; Reset the screen - Warn: hard code
+	mov ah, 0
+	mov al, 0x03
+	int 0x10
+
+	; Set Color Palette
+	mov ah, 0x0B
+	mov bh, 0
+	mov bl, 0x01
+	int 0x10
+
+	call printRegs
+	mov si, goBackMsg
+	call print_string
+	mov ah, 0x00				; pause screen :)
+	int 0x16
+	jmp reset_screen				; go back to main menu
+
+	;; -------------------------------------------------------------------
+	;; Menu N) THE END OS - jump forever
 	;; -------------------------------------------------------------------
 end_os:
 	cli 						; clear interrupts
@@ -170,10 +186,11 @@ end_os:
 
 
 	;; -------------------------------------------------------------------
-	;; Functions
+	;; Include files
 	;; -------------------------------------------------------------------
 	%include "../src/print/print_string.asm"
 	%include "../src/print/print_hex.asm"
+	%include "../src/print/print_registers.asm"
 
 
 
@@ -183,16 +200,17 @@ end_os:
 	;; ------------------------------------------------------------------
 welcome: 		db 	'welcome to simOS - Made my Sohaib (smalinux)', 0xA, 0xD,\
 					'     https://github.com/smalinux/simOS', 0xA, 0xD, 0xA, 0xD, 0
-fileTable: 		db 	'F) File Browser', 0xA, 0xD,\
-					'R) Reboot', 0xA, 0xD, 0
+fileTable: 		db 	' F) File Browser', 0xA, 0xD,\
+					' R) Reboot', 0xA, 0xD,\
+					' P) Print Register Values', 0xA, 0xD, 0
 ; line: times 80 	db 	'-'
 success: 		db	0xA, 0xD, 'Okey! command found', 0xA, 0xD, 0
-failure: 		db	0xA, 0xD, 'Ooops! Something went wrong :(', 0xA, 0xD, 0
+failure: 		db	0xA, 0xD, 0xA, 0xD, ' Ooops! Something went wrong :(', 0xA, 0xD,0xA, 0xD, 0
 
 ;; File Table Heading
 fileTableHeading: 			db 	0xA, 0xD,'File/Program         Sector', 0xA, 0xD,\
 								'------------         ------', 0xA, 0xD, 0
-
+goBackMsg		db 0xA, 0xD, 0xA, 0xD, '     Press any key to go back....', 0xA, 0xD, 0
 cmdString: 		db 	''
 ;; utilities
 ; endl: db 0xA, 0xD, 0
@@ -203,4 +221,4 @@ cmdString: 		db 	''
 	;; -------------------------------------------------------------------
 	;; Sector Padding magic
 	;; -------------------------------------------------------------------
-	times 512-($-$$) db 0
+	times 1024-($-$$) db 0
