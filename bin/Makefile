@@ -17,7 +17,7 @@ run:
 
 # That shows the code
 show:
-	xxd xxx.bin
+	xxd simOS.bin
 
 clean:
 	rm *.bin

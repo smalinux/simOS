@@ -1,20 +1,22 @@
-;;;
-;;; Basic 'kernel' loaded from out bootsector
-;;;
+;;
+;; Basic 'kernel' loaded from out bootsector
+;;
 
-;;; General Setings
-	;;; Set Video Mode ;;;
+	;; ------------------------------------------------------------------
+	;; General Setings
+	;; ------------------------------------------------------------------
+	; Set Video Mode
 	mov ah, 0
 	mov al, 0x03
 	int 0x10
 
-	;;; Set Color Palette
+	; Set Color Palette
 	mov ah, 0x0B
 	mov bh, 0
 	mov bl, 0x01
 	int 0x10
 
-;;; Write Text in Teletype Mode
+	; Write Text in Teletype Mode
 	mov si, welcome
 	call print_string
 
@@ -31,12 +33,14 @@
 	; mov si, doller
 	; 	call print_string
 
-;;; Write Hex in Teletype 
-	; mov si, 0x12cB 			;; Sample hex number
+	; Write Hex in Teletype 
+	; mov si, 0x12cB 			; Sample hex number
 	; call print_hex
 
 
+	;; -------------------------------------------------------------------
 	;; Get user input, print to screen & choose menu option or run command
+	;; -------------------------------------------------------------------
 get_input:
 	mov di, cmdString			; now di pointer to cmdString memory location	
 keyloop:
@@ -56,49 +60,91 @@ keyloop:
 run_cmd:
 	mov byte [di], 0			; null terminate cmdString from di
 	mov al, [cmdString]
-	cmp al, 'f'					; file table command/ menu option
-	jne not_found
-	cmp al, 'n'					; e(n)d our current program
+	cmp al, 'F'					; file table command/ menu option
+	je filebrowser
+	cmp al, 'R'
+	je reboot
+	cmp al, 'N'					; e(n)d our current program
 	je end_os
-	mov si, success 			; command found!
-	call print_string
-	jmp get_input
-
-not_found:
 	mov si, failure 			; command not found
 	call print_string
 	jmp get_input
 
+	;; -------------------------------------------------------------------
+	;; F) File Browser
+	;; -------------------------------------------------------------------
+	;; Load File Table string from its memory location (0x1000:0000), print file
+	;;  and program names & sector numbers to screen, for user to choose
+filebrowser:
+	;; Reset scrren state - Warning: this code is dublicated!
+	;; ------------------
+	; Set Video Mode
+	mov ah, 0
+	mov al, 0x03
+	int 0x10
+
+	; Set Color Palette
+	mov ah, 0x0B
+	mov bh, 0
+	mov bl, 0x01
+	int 0x10
+	
+	mov ax, 0x1000 				; file table location
+	mov es, ax
+	mov bx, 0
+	mov ah, 0x0e
+	mov al, [ES:BX]
+	int 0x10
+	hlt
 
 
-;;; THE END OS - jump forever
+	;; -------------------------------------------------------------------
+	;; R) 'warm' reboot - far jump to reset vector
+	;; -------------------------------------------------------------------
+reboot:
+	jmp 0xffff:0x0000
+
+	;; -------------------------------------------------------------------
+	;; N) THE END OS - jump forever
+	;; -------------------------------------------------------------------
 end_os:
-	cli 				; clear interrupts
-	hlt 				; halt the cpu
+	cli 						; clear interrupts
+	hlt 						; halt the cpu
 
-;;; Functions
+
+	;; ===================================================================
+	;; End Main logic
+	;; ===================================================================
+
+
+	;; -------------------------------------------------------------------
+	;; Functions
+	;; -------------------------------------------------------------------
 	%include "../src/print/print_string.asm"
 	%include "../src/print/print_hex.asm"
 
 
-;;; welcome Message
-welcome: 		db 'welcome to simOS - Made my Sohaib (smalinux)', 0xA, 0xD,\
+
+
+	;; ------------------------------------------------------------------
+	;; Vars
+	;; ------------------------------------------------------------------
+welcome: 		db 	'welcome to simOS - Made my Sohaib (smalinux)', 0xA, 0xD,\
 					'     https://github.com/smalinux/simOS', 0xA, 0xD, 0xA, 0xD, 0
-fileTable: 		db 'F) File Browser', 0xA, 0xD, 0
-
-line: times 80 	db '-'
-
+fileTable: 		db 	'F) File Browser', 0xA, 0xD,\
+					'R) Reboot', 0xA, 0xD, 0
+line: times 80 	db 	'-'
 success: 		db	0xA, 0xD, 'Okey! command found', 0xA, 0xD, 0
 failure: 		db	0xA, 0xD, 'Ooops! Something went wrong :(', 0xA, 0xD, 0
+cmdString: 		db 	''
 
 
-cmdString: 		db ''
-
-
-;;; utilities
+;; utilities
 ; endl: db 0xA, 0xD, 0
-;;; $
+;; $
 doller: db '$ '
 
-;;; Sector Padding magic
+	;; -------------------------------------------------------------------
+	;; Sector Padding magic
+	;; -------------------------------------------------------------------
 	times 510-($-$$) db 0
