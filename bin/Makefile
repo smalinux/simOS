@@ -13,7 +13,8 @@ fileTable.bin:
 	nasm -f bin ../src/asm/fileTable.asm -o fileTable.bin
 
 run:
-	bochs
+	#bochs
+	qemu-system-i386 -fda simOS.bin
 
 # That shows the code
 show:
