@@ -198,7 +198,7 @@ end_os:
 	;; ------------------------------------------------------------------
 	;; Vars
 	;; ------------------------------------------------------------------
-welcome: 		db 	'welcome to simOS - Made my Sohaib (smalinux)', 0xA, 0xD,\
+welcome: 		db 	'welcome to simOS - Made by Sohaib (smalinux)', 0xA, 0xD,\
 					'     https://github.com/smalinux/simOS', 0xA, 0xD, 0xA, 0xD, 0
 fileTable: 		db 	' F) File Browser', 0xA, 0xD,\
 					' R) Reboot', 0xA, 0xD,\
